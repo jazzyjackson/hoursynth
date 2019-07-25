@@ -1,5 +1,7 @@
 #include "Volume3.h"
 #define speakerPin 9
+#define minFreq 50
+#define maxFreq 1000
 
 #include <CapacitiveSensor.h>
 CapacitiveSensor   cs_4_2 = CapacitiveSensor(4,2);        // 10M resistor between pins 4 & 2, pin 2 is sensor pin, add a wire and or foil if desired
@@ -16,27 +18,25 @@ int runningHigh = 0;
 int runningLow = 0;
 
 
+
 void setup() {
   Serial.begin(9600);
   
   setupKnob();
   
   for(int i = 0; i < n; i++){
-    buildAverage(runningPast, i, cs_4_2.capacitiveSensor(30) + 1);
-  }
-  for(int i = 0; i < n; i++){
-    buildAverage(runningPresent, i, cs_4_2.capacitiveSensor(30) + 1);
+    buildAverage(i, cs_4_2.capacitiveSensor(30) + 1);
   }
 }
 
 void loop() {
   // subtract last index from totals, we're about to update it.
-  int sample = cs_4_2.capacitiveSensor(30) + 1
+  int sample = cs_4_2.capacitiveSensor(30) + 1;
   
   updateAverage(sample); // sets the runningHighs and runningLows to determine the bounds for normalize...via global variables
   
-  int amplitude = normalize(sample, 0, 1000)
-  int frequency = map(analogRead(A2), 0, 1023, 10, 5000)) // <-- the last two integers are your output frequency range!
+  int amplitude = normalize(sample, 0, 1000);
+  int frequency = map(analogRead(A2), 0, 1023, minFreq, maxFreq);
   
   vol.tone(speakerPin, frequency, amplitude);
 
@@ -72,7 +72,6 @@ void buildAverage(int index, int sample){
 }
 
 void updateAverage(int newSample){
-  int newSample = cs_4_2.capacitiveSensor(30) + 1;
   int oldSample = runningPresent[readIndex];
   
   pastSum -= runningPast[readIndex];
@@ -97,7 +96,7 @@ void updateAverage(int newSample){
 }
 
 int normalize(int sample, int minimum, int maximum){
-  int k = map(sample, runningLow, runningHigh, minumum, maximum)
-  int j = constrain(k, minimum, maximum)
+  int k = map(sample, runningLow, runningHigh, minimum, maximum);
+  int j = constrain(k, minimum, maximum);
   return j;
 }
